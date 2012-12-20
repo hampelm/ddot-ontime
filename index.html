@@ -42,12 +42,16 @@
         background:#6a8c1f;
       }
 
-      .late {
+      .behind {
         background:#fcb000;
       }
 
-      .verylate {
+      .late {
         background:#ff6d49;
+      }
+
+      .verylate {
+        background:#e20027;
       }
 
       .unknown {
@@ -132,8 +136,9 @@
                   var absDeviation = Math.abs(deviation);
                   var severity;
                   if (absDeviation >= 0) { severity = "ontime"};
-                  if (absDeviation >= 5) { severity = "late"};
-                  if (absDeviation >= 10) { severity = "verylate"};
+                  if (absDeviation >= 5) { severity = "behind"};
+                  if (absDeviation >= 10) { severity = "late"};
+                  if (absDeviation >= 20) { severity ="verylate" };
 
                   if (trip.status.predicted === false) {
                     deviation = "?";
