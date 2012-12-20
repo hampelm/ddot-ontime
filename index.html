@@ -15,7 +15,6 @@
 
       .container {
         overflow:auto;
-        margin-bottom:10px;
       }
 
       .route,
@@ -23,6 +22,7 @@
         height:150px;
         width:150px;
         margin-right:10px;
+        margin-bottom:10px;
 
         color:#fff;
 
@@ -125,6 +125,7 @@
                 var listOfTrips = trips.data.list;
 
                 _.each(listOfTrips, function(trip){
+                  console.log(trip.status);
                   console.log(route.shortName, route.longName, trip.status.predicted, trip.status.scheduleDeviation / 60);
 
                   var deviation = trip.status.scheduleDeviation / 60;
