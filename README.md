@@ -1,7 +1,7 @@
-ddot-stop-finder
+DDOT Service Overview 
 ================
 
-Find DDOT stops near a location and give the user a nice printable poster.
+Gives a quick overview of the DDOT system.
 
 Let us know if you'd like any help using the DDOT API by emailing 
 detroit@codeforamerica.org
