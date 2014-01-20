@@ -163,9 +163,25 @@
           var routes = data.data.list;
           console.log(routes);
           routes = _.sortBy(routes, function(route) { return parseInt(route.shortName) });
-          console.log(routes);
+          console.log("sorted routes", routes);
+
+          var counts = {
+            ontime: 0,
+            behind: 0,
+            late: 0,
+            verylate: 0,
+            unknown: 0
+          };
 
           _.each(routes, function(route){
+
+            // Set up the template
+            context = {
+              name: route.longName,
+              number: route.shortName
+            };
+            $routeTemplate = $(_.template($('#route-view').html(), context));
+            $("#container").append($routeTemplate);
 
             // http://api.onebusaway.org/api/where/trips-for-route/1_44.xml?key=TEST
             url = base + "trips-for-route/" + route.id + ".json" + key + "&includeStatus=true";
@@ -174,13 +190,6 @@
               data: {},
               success: function(trips) {
 
-                // Set up the template
-                context = {
-                  name: route.longName,
-                  number: route.shortName
-                };
-                $routeTemplate = $(_.template($('#route-view').html(), context));
-                $("#container").append($routeTemplate);
 
 
                 // Get the list of trips
@@ -203,6 +212,8 @@
                     severity = "unknown";
                   };
 
+                  counts[severity] += 1;
+
                   // Template for the trip
                   context = {
                     deviation: deviation,
@@ -218,7 +229,13 @@
               dataType: "json"
             })
 
-          });
+          }); // end foreach route
+
+          $('.key .unknown .num').html(counts.unknown);
+          $('.key .ontime .num').html(counts.ontime);
+          $('.key .behind .num').html(counts.behind);
+          $('.key .late .num').html(counts.late);
+          $('.key .verylate .num').html(counts.verylate);
 
         },
         dataType: "json"
