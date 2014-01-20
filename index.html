@@ -214,6 +214,13 @@
 
                   counts[severity] += 1;
 
+                  $('.key .unknown .num').html(counts.unknown);
+                  $('.key .ontime .num').html(counts.ontime);
+                  $('.key .behind .num').html(counts.behind);
+                  $('.key .late .num').html(counts.late);
+                  $('.key .verylate .num').html(counts.verylate);
+
+
                   // Template for the trip
                   context = {
                     deviation: deviation,
@@ -231,12 +238,7 @@
 
           }); // end foreach route
 
-          $('.key .unknown .num').html(counts.unknown);
-          $('.key .ontime .num').html(counts.ontime);
-          $('.key .behind .num').html(counts.behind);
-          $('.key .late .num').html(counts.late);
-          $('.key .verylate .num').html(counts.verylate);
-
+          console.log("Got counts", counts);
         },
         dataType: "json"
       });
