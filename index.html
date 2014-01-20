@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <title>On time?</title>
-    
+
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
     <script src="js/underscore.js"></script>
 
@@ -152,7 +152,7 @@
 
       var totalDeviation = 0;
       var totalTrips = 0;
-      
+
       // http://api.onebusaway.org/api/where/routes-for-agency/1.xml?key=TEST
       var url = base + "routes-for-agency/DDOT.json" + key;
       console.log(url);
@@ -173,7 +173,7 @@
               url: url,
               data: {},
               success: function(trips) {
-               
+
                 // Set up the template
                 context = {
                   name: route.longName,
@@ -187,7 +187,7 @@
                 var listOfTrips = trips.data.list;
 
                 _.each(listOfTrips, function(trip){
-                  console.log(trip.status);
+                  console.log(trip);
                   console.log(route.shortName, route.longName, trip.status.predicted, trip.status.scheduleDeviation / 60);
 
                   var deviation = trip.status.scheduleDeviation / 60;
@@ -227,6 +227,6 @@
 
     });
   </script>
-    
+
 </body>
 </html>
