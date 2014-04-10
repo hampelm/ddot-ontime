@@ -6,11 +6,11 @@
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
     <script src="js/underscore.js"></script>
+    <script src="js/moment.js"></script>
 
     <style type="text/css">
       body {
         font-family:helvetica;
-        font-weight:bold;
       }
 
       .container {
@@ -19,10 +19,11 @@
 
       .route,
       .trip {
-        height:150px;
         width:150px;
         margin-right:10px;
         margin-bottom:10px;
+        height: 150px;
+
 
         color:#fff;
 
@@ -31,7 +32,6 @@
         display: inline;
         float:left;
         text-align:center;
-        line-height:150px;
       }
 
       .trips {
@@ -109,6 +109,20 @@
         line-height:1em;
         border-radius:75px;
       }
+      table {
+        border: 1px solid #ddd;
+        border-width: 1px 0px 0px 1px;
+
+      }
+      th, td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-width: 0px 1px 1px 0px;
+      }
+
+      .dupe td {
+        background: #ffe;
+      }
 
     </style>
 
@@ -148,8 +162,7 @@
 
       </div>
       <div class="container">
-        <div class="route">route</div>
-        <div class="trip-heading">delays for each trip</div>
+        <div class="">route</div>
       </div>
 
     </div>
@@ -159,13 +172,36 @@
         <div class="route">
           <%= number %>
         </div>
-        <div class="trips"></div>
+        <table class="trips" cellspacing="0" cellpadding="0">
+        <thead>
+        <tr>
+          <th>Trip</th>
+          <th>Last update</th>
+          <th>Closest stop</th>
+          <th>Next stop</th>
+          <th>Adherence</th>
+        </th>
+        </thead>
+
+        </table>
       </div>
     </script>
+
+
     <script type="text/template" id="trip-view">
-      <div class="trip <%= severity %>">
-        <%= deviation %>
-      </div>
+      <tr class="<%= duplicate %>">
+        <td><%= trip.tripId %></td>
+        <td>
+          <% if(trip.status.lastUpdateTime) { %>
+            <%= moment(trip.status.lastUpdateTime).format('MMMM Do YYYY, h:mm:ss:SSS a') %>
+          <% } else { %>
+            never
+          <% } %>
+        </td>
+        <td><%= trip.status.closestStop %></td>
+        <td><%= trip.status.nextStop %></td>
+        <td><%= deviation %></td>
+      </tr>
     </script>
 
   <script type="text/javascript">
@@ -175,6 +211,8 @@
       var key = "?key=BETA&format=json";
       var base = "http://ddot-beta.herokuapp.com/api/api/where/";
 
+
+      var duper = {}; // for checking for duplicate tripIDs
 
       var $routeTemplate;
       var $tripTemplate;
@@ -221,6 +259,7 @@
               data: {},
               success: function(trips) {
 
+                //console.log(trips);
 
 
                 // Get the list of trips
@@ -253,10 +292,19 @@
                   $('.key .verylate .num').html(counts.verylate);
 
 
+                  var duplicate = '';
+                  if(trip.tripId in duper) {
+                    duplicate = 'dupe';
+                  }
+
+                  duper[trip.tripId] = true;
+
                   // Template for the trip
                   context = {
+                    trip: trip,
                     deviation: deviation,
                     severity: severity,
+                    duplicate: duplicate
                   }
                   $tripTemplate = $(_.template($('#trip-view').html(), context));
 
