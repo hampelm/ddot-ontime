@@ -195,7 +195,7 @@
           <% if(trip.status.lastUpdateTime) { %>
             <%= moment(trip.status.lastUpdateTime).format('MMMM Do YYYY, h:mm:ss:SSS a') %>
           <% } else { %>
-            never
+            <strong>never</strong>
           <% } %>
         </td>
         <td><%= trip.status.closestStop %></td>
