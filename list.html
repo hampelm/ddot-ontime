@@ -62,6 +62,10 @@
         color:#333;
       }
 
+      .early {
+        background: #1c94cf;
+      }
+
       .ontime {
         background:#6a8c1f;
       }
@@ -109,11 +113,13 @@
         line-height:1em;
         border-radius:75px;
       }
+
       table {
         border: 1px solid #ddd;
         border-width: 1px 0px 0px 1px;
-
+        margin-top: 10px;
       }
+
       th, td {
         padding: 10px;
         border: 1px solid #ddd;
@@ -140,15 +146,15 @@
           </div>
           <div class="trip unknown">
             <div class="num">?</div>
-            untracked
+            unknown
+          </div>
+          <div class="trip early">
+            <div class="num">?</div>
+            early
           </div>
           <div class="trip ontime">
             <div class="num">?</div>
             on time
-          </div>
-          <div class="trip behind">
-            <div class="num">?</div>
-            ok
           </div>
           <div class="trip late">
             <div class="num">?</div>
@@ -175,7 +181,7 @@
         <table class="trips" cellspacing="0" cellpadding="0">
         <thead>
         <tr>
-          <th>TMB Trip Id</th>
+          <th>Trip Id</th>
           <th>Last update</th>
           <th>Headsign</th>
           <th>Next stop</th>
@@ -199,7 +205,7 @@
           <% } %>
         </td>
         <td><%= trip.headsign %></td>
-        <td><%= trip.status.nextStop %></td>
+        <td><a href="https://www.google.com/maps/preview?q=<%= trip.stop.lat %>,<%= trip.stop.lon %>"><%= trip.status.nextStop %></a> (<%= trip.stop.name %>)</td>
         <td><%= deviation %></td>
       </tr>
     </script>
@@ -219,6 +225,17 @@
       var totalDeviation = 0;
       var totalTrips = 0;
 
+
+
+      // create a map in the "map" div, set the view to a given place and zoom
+      // var map = L.map('map').setView([51.505, -0.09], 13);
+//
+      // // add an OpenStreetMap tile layer
+      // L.tileLayer('http://{s}.tile.osm.org/{z}/{x}/{y}.png', {
+      //     attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</// a> contributors'
+      // }).addTo(map);
+
+
       // http://api.onebusaway.org/api/where/routes-for-agency/1.xml?key=TEST
       var url = base + "routes-for-agency/DDOT.json" + key;
       console.log(url);
@@ -232,8 +249,8 @@
 
           var counts = {
             total: 0,
+            early: 0,
             ontime: 0,
-            behind: 0,
             late: 0,
             verylate: 0,
             unknown: 0
@@ -293,12 +310,12 @@
 
 
                   var deviation = trip.status.scheduleDeviation / 60;
-                  var absDeviation = Math.abs(deviation);
+                  // var absDeviation = Math.abs(deviation);
                   var severity;
-                  if (absDeviation >= 0) { severity = "ontime"};
-                  if (absDeviation >= 5) { severity = "behind"};
-                  if (absDeviation >= 10) { severity = "late"};
-                  if (absDeviation >= 20) { severity ="verylate" };
+                  if (deviation < 0 ) {severity ="early" }
+                  if (deviation >= 0) { severity = "ontime"};
+                  if (deviation >= 10) { severity = "late"};
+                  if (deviation >= 20) { severity ="verylate" };
 
                   if (trip.status.predicted === false) {
                     deviation = "?";
@@ -309,9 +326,9 @@
                   counts.total += 1;
 
                   $('.key .total .num').html(counts.total);
+                  $('.key .early .num').html(counts.early);
                   $('.key .unknown .num').html(counts.unknown);
                   $('.key .ontime .num').html(counts.ontime);
-                  $('.key .behind .num').html(counts.behind);
                   $('.key .late .num').html(counts.late);
                   $('.key .verylate .num').html(counts.verylate);
 
