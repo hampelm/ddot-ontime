@@ -250,7 +250,10 @@
             $("#container").append($routeTemplate);
 
             // http://api.onebusaway.org/api/where/trips-for-route/1_44.xml?key=TEST
+            //
+            // Offender! http://ddot-beta.herokuapp.com/api/api/where/trips-for-route/DDOT_5473.json?key=BETA&format=json&includeStatus=true
             url = base + "trips-for-route/" + route.id + ".json" + key + "&includeStatus=true";
+            console.log(url);
             $.ajax({
               url: url,
               data: {},
@@ -270,11 +273,18 @@
                 _.each(trips.data.references.trips, function(trip){
                   tripDetails[trip.id] = trip;
                 });
+                console.log(tripDetails);
 
                 // Get the list of trips
                 var listOfTrips = trips.data.list;
 
                 _.each(listOfTrips, function(trip){
+
+                  // Filter out trips for the wrong route
+                  if(tripDetails[trip.tripId].routeId != route.id) {
+                    return;
+                  }
+
                   // Join with relevant data
                   trip.stop = stops[trip.status.nextStop];
                   trip.headsign = tripDetails[trip.tripId].tripHeadsign;

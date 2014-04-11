@@ -177,7 +177,7 @@
         <tr>
           <th>TMB Trip Id</th>
           <th>Last update</th>
-          <th>Closest stop</th>
+          <th>Headsign</th>
           <th>Next stop</th>
           <th>Adherence</th>
         </th>
@@ -193,12 +193,12 @@
         <td><%= trip.tripId %></td>
         <td>
           <% if(trip.status.lastUpdateTime) { %>
-            <%= moment(trip.status.lastUpdateTime).format('MMMM Do YYYY, h:mm:ss:SSS a') %>
+            <%= moment(trip.status.lastUpdateTime).format('MMMM Do YYYY, h:mm a') %>
           <% } else { %>
             <strong>never</strong>
           <% } %>
         </td>
-        <td><%= trip.status.closestStop %></td>
+        <td><%= trip.headsign %></td>
         <td><%= trip.status.nextStop %></td>
         <td><%= deviation %></td>
       </tr>
@@ -210,8 +210,6 @@
       "use strict";
       var key = "?key=BETA&format=json";
       var base = "http://ddot-beta.herokuapp.com/api/api/where/";
-
-
       var duper = {}; // for checking for duplicate tripIDs
 
       var $routeTemplate;
@@ -229,9 +227,8 @@
         data: {},
         success: function(data) {
           var routes = data.data.list;
-          console.log(routes);
+          //console.log(data);
           routes = _.sortBy(routes, function(route) { return parseInt(route.shortName) });
-          console.log("sorted routes", routes);
 
           var counts = {
             total: 0,
@@ -253,20 +250,47 @@
             $("#container").append($routeTemplate);
 
             // http://api.onebusaway.org/api/where/trips-for-route/1_44.xml?key=TEST
+            //
+            // Offender! http://ddot-beta.herokuapp.com/api/api/where/trips-for-route/DDOT_5473.json?key=BETA&format=json&includeStatus=true
             url = base + "trips-for-route/" + route.id + ".json" + key + "&includeStatus=true";
+            console.log(url);
             $.ajax({
               url: url,
               data: {},
               success: function(trips) {
+                console.log("Trips for route", trips.data);
 
-                //console.log(trips);
+                var stops = {};
+                var routes = {};
+                var tripDetails = {};
 
+                _.each(trips.data.references.stops, function(stop){
+                  stops[stop.id] = stop;
+                });
+                _.each(trips.data.references.routes, function(route){
+                  routes[route.id] = route;
+                });
+                _.each(trips.data.references.trips, function(trip){
+                  tripDetails[trip.id] = trip;
+                });
+                console.log(tripDetails);
 
                 // Get the list of trips
                 var listOfTrips = trips.data.list;
 
                 _.each(listOfTrips, function(trip){
+
+                  // Filter out trips for the wrong route
+                  if(tripDetails[trip.tripId].routeId != route.id) {
+                    return;
+                  }
+
+                  // Join with relevant data
+                  trip.stop = stops[trip.status.nextStop];
+                  trip.headsign = tripDetails[trip.tripId].tripHeadsign;
+
                   console.log(route.shortName, route.longName, trip.status.predicted, trip.status.scheduleDeviation / 60, trip);
+
 
                   var deviation = trip.status.scheduleDeviation / 60;
                   var absDeviation = Math.abs(deviation);
@@ -318,7 +342,6 @@
 
           }); // end foreach route
 
-          console.log("Got counts", counts);
         },
         dataType: "json"
       });
