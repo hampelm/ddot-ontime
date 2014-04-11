@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Trip tracker</title>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.0/jquery.min.js"></script>
+    <script src="js/underscore.js"></script>
+    <script src="js/moment.js"></script>
+
+    <style type="text/css">
+      body {
+        font-family:helvetica;
+      }
+
+      .container {
+        overflow:auto;
+      }
+
+      .route,
+      .trip {
+        width:150px;
+        margin-right:10px;
+        margin-bottom:10px;
+        height: 150px;
+
+
+        color:#fff;
+
+        font-size:60px;
+
+        display: inline;
+        float:left;
+        text-align:center;
+      }
+
+      .trips {
+        float:left;
+        margin-left:180px;
+        overflow:auto;
+      }
+
+      .trip-heading {
+        height:150px;
+        margin-right:10px;
+        margin-bottom:10px;
+
+        font-size:60px;
+        color:#333;
+
+        display: inline;
+        float:left;
+        text-align:left;
+        line-height:150px;
+
+        margin-left:180px;
+        overflow:auto;
+      }
+
+      .route {
+        margin-right:-170px;
+        color:#333;
+      }
+
+      .ontime {
+        background:#6a8c1f;
+      }
+
+      .behind {
+        background:#fcb000;
+      }
+
+      .late {
+        background:#ff6d49;
+      }
+
+      .verylate {
+        background:#e20027;
+      }
+
+      .unknown {
+        background:#ddd;
+      }
+
+      .total {
+        background:#555;
+      }
+
+      .key .num {
+        padding-top:50px;
+        padding-bottom:15px;
+        font-size:60px;
+      }
+
+      .key .ontime {
+        font-size:25px;
+      }
+
+      .key .verylate {
+        font-size:35px;
+      }
+
+      .key .unknown {
+        font-size:25px;
+      }
+
+      .key .trip {
+        font-size:25px;
+        line-height:1em;
+        border-radius:75px;
+      }
+      table {
+        border: 1px solid #ddd;
+        border-width: 1px 0px 0px 1px;
+
+      }
+      th, td {
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-width: 0px 1px 1px 0px;
+      }
+
+      .dupe td {
+        background: #ffe;
+      }
+
+    </style>
+
+</head>
+
+<body>
+
+    <div id="container">
+      <div class="container">
+        <div class="route">trips:</div>
+        <div class="trips key">
+          <div class="trip total">
+            <div class="num">?</div>
+            total
+          </div>
+          <div class="trip unknown">
+            <div class="num">?</div>
+            untracked
+          </div>
+          <div class="trip ontime">
+            <div class="num">?</div>
+            on time
+          </div>
+          <div class="trip behind">
+            <div class="num">?</div>
+            ok
+          </div>
+          <div class="trip late">
+            <div class="num">?</div>
+            late
+          </div>
+          <div class="trip verylate">
+            <div class="num">?</div>
+            very late
+          </div>
+        </div>
+
+      </div>
+      <div class="container">
+        <div class="">route</div>
+      </div>
+
+    </div>
+
+    <script type="text/template" id="route-view">
+      <div class="container" id="route-<%= number %>">
+        <div class="route">
+          <%= number %>
+        </div>
+        <table class="trips" cellspacing="0" cellpadding="0">
+        <thead>
+        <tr>
+          <th>TMB Trip Id</th>
+          <th>Last update</th>
+          <th>Headsign</th>
+          <th>Next stop</th>
+          <th>Adherence</th>
+        </th>
+        </thead>
+
+        </table>
+      </div>
+    </script>
+
+
+    <script type="text/template" id="trip-view">
+      <tr class="<%= duplicate %>">
+        <td><%= trip.tripId %></td>
+        <td>
+          <% if(trip.status.lastUpdateTime) { %>
+            <%= moment(trip.status.lastUpdateTime).format('MMMM Do YYYY, h:mm a') %>
+          <% } else { %>
+            <strong>never</strong>
+          <% } %>
+        </td>
+        <td><%= trip.headsign %></td>
+        <td><%= trip.status.nextStop %></td>
+        <td><%= deviation %></td>
+      </tr>
+    </script>
+
+  <script type="text/javascript">
+
+    $(function() {
+      "use strict";
+      var key = "?key=BETA&format=json";
+      var base = "http://ddot-beta.herokuapp.com/api/api/where/";
+      var duper = {}; // for checking for duplicate tripIDs
+
+      var $routeTemplate;
+      var $tripTemplate;
+      var context;
+
+      var totalDeviation = 0;
+      var totalTrips = 0;
+
+      // http://api.onebusaway.org/api/where/routes-for-agency/1.xml?key=TEST
+      var url = base + "routes-for-agency/DDOT.json" + key;
+      console.log(url);
+      $.ajax({
+        url: url,
+        data: {},
+        success: function(data) {
+          var routes = data.data.list;
+          //console.log(data);
+          routes = _.sortBy(routes, function(route) { return parseInt(route.shortName) });
+
+          var counts = {
+            total: 0,
+            ontime: 0,
+            behind: 0,
+            late: 0,
+            verylate: 0,
+            unknown: 0
+          };
+
+          _.each(routes, function(route){
+
+            // Set up the template
+            context = {
+              name: route.longName,
+              number: route.shortName
+            };
+            $routeTemplate = $(_.template($('#route-view').html(), context));
+            $("#container").append($routeTemplate);
+
+            // http://api.onebusaway.org/api/where/trips-for-route/1_44.xml?key=TEST
+            url = base + "trips-for-route/" + route.id + ".json" + key + "&includeStatus=true";
+            $.ajax({
+              url: url,
+              data: {},
+              success: function(trips) {
+                console.log("Trips for route", trips.data);
+
+                var stops = {};
+                var routes = {};
+                var tripDetails = {};
+
+                _.each(trips.data.references.stops, function(stop){
+                  stops[stop.id] = stop;
+                });
+                _.each(trips.data.references.routes, function(route){
+                  routes[route.id] = route;
+                });
+                _.each(trips.data.references.trips, function(trip){
+                  tripDetails[trip.id] = trip;
+                });
+
+                // Get the list of trips
+                var listOfTrips = trips.data.list;
+
+                _.each(listOfTrips, function(trip){
+                  // Join with relevant data
+                  trip.stop = stops[trip.status.nextStop];
+                  trip.headsign = tripDetails[trip.tripId].tripHeadsign;
+
+                  console.log(route.shortName, route.longName, trip.status.predicted, trip.status.scheduleDeviation / 60, trip);
+
+
+                  var deviation = trip.status.scheduleDeviation / 60;
+                  var absDeviation = Math.abs(deviation);
+                  var severity;
+                  if (absDeviation >= 0) { severity = "ontime"};
+                  if (absDeviation >= 5) { severity = "behind"};
+                  if (absDeviation >= 10) { severity = "late"};
+                  if (absDeviation >= 20) { severity ="verylate" };
+
+                  if (trip.status.predicted === false) {
+                    deviation = "?";
+                    severity = "unknown";
+                  };
+
+                  counts[severity] += 1;
+                  counts.total += 1;
+
+                  $('.key .total .num').html(counts.total);
+                  $('.key .unknown .num').html(counts.unknown);
+                  $('.key .ontime .num').html(counts.ontime);
+                  $('.key .behind .num').html(counts.behind);
+                  $('.key .late .num').html(counts.late);
+                  $('.key .verylate .num').html(counts.verylate);
+
+
+                  var duplicate = '';
+                  if(trip.tripId in duper) {
+                    //duplicate = 'dupe';
+                  }
+
+                  duper[trip.tripId] = true;
+
+                  // Template for the trip
+                  context = {
+                    trip: trip,
+                    deviation: deviation,
+                    severity: severity,
+                    duplicate: duplicate
+                  }
+                  $tripTemplate = $(_.template($('#trip-view').html(), context));
+
+                  $("#route-" + route.shortName + " .trips").append($tripTemplate);
+                });
+
+               // $("#container").append($routeTemplate);
+              },
+              dataType: "json"
+            })
+
+          }); // end foreach route
+
+        },
+        dataType: "json"
+      });
+
+
+    });
+  </script>
+
+</body>
+</html>
