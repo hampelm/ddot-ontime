@@ -329,7 +329,7 @@
 
                   // Add a map marker
                   var m = L.marker([trip.stop.lat, trip.stop.lon]);
-                  m.bindPopup(trip.status.nextStop + " (" + trip.stop.name + ")");
+                  m.bindPopup(trip.status.nextStop + " (" + trip.stop.name + ") " + trip.headsign);
                   group.addLayer(m);
 
                   var deviation = trip.status.scheduleDeviation / 60;
