@@ -313,8 +313,8 @@
                   // var absDeviation = Math.abs(deviation);
                   var severity;
                   if (deviation < 0 ) {severity ="early" }
-                  if (deviation >= 0) { severity = "ontime"};
-                  if (deviation >= 10) { severity = "late"};
+                  if (deviation < 6 && deviation >= 0) { severity = "ontime"};
+                  if (deviation >= 6) { severity = "late"};
                   if (deviation >= 20) { severity ="verylate" };
 
                   if (trip.status.predicted === false) {
