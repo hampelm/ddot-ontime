@@ -182,6 +182,7 @@
         <thead>
         <tr>
           <th>Trip Id</th>
+          <th>Vehicle ID</th>
           <th>Last update</th>
           <th>Headsign</th>
           <th>Next stop</th>
@@ -197,6 +198,7 @@
     <script type="text/template" id="trip-view">
       <tr class="<%= duplicate %>">
         <td><%= trip.tripId %></td>
+        <td><%= trip.status.vehicleId %></td>
         <td>
           <% if(trip.status.lastUpdateTime) { %>
             <%= moment(trip.status.lastUpdateTime).format('MMMM Do YYYY, h:mm a') %>
