@@ -160,10 +160,6 @@
             <div class="num">?</div>
             late
           </div>
-          <div class="trip verylate">
-            <div class="num">?</div>
-            very late
-          </div>
         </div>
 
       </div>
@@ -254,7 +250,6 @@
             early: 0,
             ontime: 0,
             late: 0,
-            verylate: 0,
             unknown: 0
           };
 
@@ -317,7 +312,6 @@
                   if (deviation < 0 ) {severity ="early" }
                   if (deviation < 6 && deviation >= 0) { severity = "ontime"};
                   if (deviation >= 6) { severity = "late"};
-                  if (deviation >= 20) { severity ="verylate" };
 
                   if (trip.status.predicted === false) {
                     deviation = "?";
@@ -332,7 +326,6 @@
                   $('.key .unknown .num').html(counts.unknown);
                   $('.key .ontime .num').html(counts.ontime);
                   $('.key .late .num').html(counts.late);
-                  $('.key .verylate .num').html(counts.verylate);
 
 
                   var duplicate = '';
